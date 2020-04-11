@@ -1,6 +1,5 @@
 # /bin/sh
 
-
 # DIRECTORIES
 DIR=/etc/pihole
 TMP=/tmp
@@ -61,7 +60,6 @@ case $default in
           ;;
 esac
 }
-
 
 lists () {
 echo -e "  [?] What adlist lists do you wish to add?\n"
