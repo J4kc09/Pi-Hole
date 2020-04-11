@@ -44,11 +44,10 @@ echo -e "
 }
 
 defaults () {
-echo -n "  [?] Do you wish to add default lists to adlists.list? [Y/n] "
-read -n1 default
+echo -n "  [?] Do you wish to add default lists to adlists.list? [Y/n] "; read -n1 default && printf "\n"
 case $default in
         n|N)
-          echo -e "\n\n  [i] Target: Default adlist.list"
+          echo -e "\n  [i] Target: Default adlist.list"
           echo -e "  ${CROSS} Status: Omitted\n"
           ;;
         *)
@@ -57,7 +56,7 @@ case $default in
           echo "http://sysctl.org/cameleon/hosts" >> ${DIR}/adlists.lists
           echo "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt" >> ${DIR}/adlists.lists
           echo "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt" >> ${DIR}/adlists.lists
-          echo -e "\n\n  [i] Target: Default adlist.list"
+          echo -e "\n  [i] Target: Default adlist.list"
           echo -e "  ${TICK} Status: Restored defaults\n"
           ;;
 esac
@@ -69,7 +68,7 @@ echo -e "  [?] What adlist lists do you wish to add?\n"
 echo "    [1] Ticked lists (No one whitelisting) [default]"
 echo "    [2] Non-crossed lists (Someone usually whitelisting)"
 echo -e "    [3] All lists (Someone always whitelisting)\n"
-echo -n "  [i] Select [1-3]:  " ; read -n1 type && echo -e "\n"
+echo -n "  [i] Select [1-3]:  " ; read -n1 type && printf "\n"
 case $type in
         2)
             wget -q "https://v.firebog.net/hosts/lists.php?type=nocross" -O ${TMP}/pihole-updater/adlists
@@ -91,11 +90,10 @@ echo -e "  ${TICK} Status: Retrieval successful\n"
 }
 
 regex () {
-echo -n "  [?] Do you wish to add a regex list? [Y/n] "
-read -n1 regex
+echo -n "  [?] Do you wish to add a regex list? [Y/n] " ; read -n1 regex && printf "\n"
 case $regex in
         n|N)
-	  echo -e "\n\n  [i] Target: Regex list"
+	  echo -e "\n  [i] Target: Regex list"
 	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
 	*)
@@ -104,18 +102,17 @@ case $regex in
           sort -u ${TMP}/pihole-updater/regex > ${TMP}/pihole-updater/regex.list
 	  :> ${DIR}/regex.list && cat ${TMP}/pihole-updater/regex.list > ${DIR}/regex.list
 	  pihole --regex -nr
-	  echo -e "\n\n  [i] Target: Regex list"
+	  echo -e "\n  [i] Target: Regex list"
 	  echo -e "  ${TICK} Status: Successfully added\\n"
 	  ;;
 esac
 }
 
 whitelist () {
-echo -n "  [?] Do you wish to add a whitelist?  [Y/n] "
-read -n1 whitelist
+echo -n "  [?] Do you wish to add a whitelist?  [Y/n] " ; read -n1 whitelist && printf "\n"
 case $whitelist in
 	n|N)
-	  echo -e "\n\n  [i] Target: Whitelist"
+	  echo -e "\n  [i] Target: Whitelist"
 	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
 	*)
@@ -124,7 +121,7 @@ case $whitelist in
 	  sort -u ${TMP}/pihole-updater/whitelist > ${TMP}/pihole-updater/whitelist.txt
           :> ${DIR}/whitelist.txt && cat ${TMP}/pihole-updater/whitelist.txt > ${DIR}/whitelist.txt
 	  pihole -w -nr
-	  echo -e "\n\n  [i] Target: Whitelist"
+	  echo -e "\n  [i] Target: Whitelist"
 	  echo -e "  ${TICK} Status: Successfully added\n"
 esac
 }
@@ -137,15 +134,14 @@ echo -e "  ${TICK}Status: Successfully cleaned\n"
 }
 
 logs () {
-echo -n "  [?] Do you wish to flush logs too?  [Y/n] "
-read -n1 logs
+echo -n "  [?] Do you wish to flush logs too?  [Y/n] " ; read -n1 logs && printf "\n"
 case $logs in
         n|N)
-          echo -e "\n\n  [i] Target: Flush logs"
+          echo -e "\n  [i] Target: Flush logs"
           echo -e "  ${CROSS}Status: Omitted\n"
           ;;
         *)
-          echo -e "\n\n  [i] Target: Flush logs"
+          echo -e "\n  [i] Target: Flush logs"
           pihole -f
           echo -e "  ${TICK}Status: Successfully done\n"
           ;;
@@ -155,14 +151,14 @@ esac
 gravity () {
 echo -e "  [i] Updating lists...\n"
 pihole -g
+printf "\n"
 }
 
 update () {
-echo -n "  [?] Do you wish to check for updates?  [Y/n] "
-read -n1 updates
+echo -n "  [?] Do you wish to check for updates?  [Y/n] " ; read -n1 updates && printf "\n"
 case $updates in
 	n|N)
-	  echo -e "\n\n  [i] Target: Updates"
+	  echo -e "\n  [i] Target: Updates"
 	  echo -e "  ${CROSS}Status: Omitted\n"
 	  ;;
 	*)
