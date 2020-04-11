@@ -197,7 +197,7 @@ pihole-list-update
 update
 fi
 
-if [ $1 == "--update" ] || [ $1 == "" ] || [ $1 == "-u" ]; then
+if [ $1 == "--update" ] || [ $1 == "-u" ]; then
 logo
 pihole-list-update
 update
