@@ -178,8 +178,6 @@ gravity
 if [ $1 == "--clean" ] || [ $1 == "-c" ]; then
 logo
 clean
-echo "  [i] Target: Pi-Hole lists"
-echo -e "  ${TICK}Status: Successfully cleaned\n"
 logs
 defaults
 gravity
@@ -189,14 +187,15 @@ fi
 if [ $1 == "--clean-update" ] || [ $1 == "-cu" ]; then
 logo
 clean
-echo "  [i] Target: Pi-Hole lists"
-echo -e "  ${TICK}Status: Successfully cleaned\n"
+defaults
 pihole-list-update
+logs
 update
 fi
 
 if [ $1 == "--update" ] || [ $1 == "-u" ]; then
 logo
 pihole-list-update
+logs
 update
 fi
