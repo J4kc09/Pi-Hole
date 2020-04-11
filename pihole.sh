@@ -47,7 +47,7 @@ defaults () {
 echo -n "  [?] Do you wish to add default lists to adlists.list? [Y/n] "
 read -n1 default
 case $default in
-        n)
+        n|N)
           echo -e "\n\n  [i] Target: Default adlist.list"
           echo -e "  ${CROSS} Status: Omitted\n"
           ;;
@@ -86,7 +86,7 @@ sed -i '/hosts-file.net/d' ${TMP}/pihole-updater/adlists
 #sed -i '/Shalla-mal/d' $DIR/pihole-updater/adlists
 sort -u ${TMP}/pihole-updater/adlists > ${TMP}/pihole-updater/adlists.list
 :> ${DIR}/adlists.list && cat ${TMP}/pihole-updater/adlists.list > ${DIR}/adlists.list
-echo "  [i] Target: adlists"
+echo "  [i] Target: Adlists"
 echo -e "  ${TICK} Status: Retrieval successful\n"
 }
 
@@ -94,7 +94,7 @@ regex () {
 echo -n "  [?] Do you wish to add a regex list? [Y/n] "
 read -n1 regex
 case $regex in
-        n)
+        n|N)
 	  echo -e "\n\n  [i] Target: Regex list"
 	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
@@ -114,7 +114,7 @@ whitelist () {
 echo -n "  [?] Do you wish to add a whitelist?  [Y/n] "
 read -n1 whitelist
 case $whitelist in
-	n)
+	n|N)
 	  echo -e "\n\n  [i] Target: Whitelist"
 	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
@@ -124,7 +124,7 @@ case $whitelist in
 	  sort -u ${TMP}/pihole-updater/whitelist > ${TMP}/pihole-updater/whitelist.txt
           :> ${DIR}/whitelist.txt && cat ${TMP}/pihole-updater/whitelist.txt > ${DIR}/whitelist.txt
 	  pihole -w -nr
-	  echo -e "\n\n  [i] Target: whitelist"
+	  echo -e "\n\n  [i] Target: Whitelist"
 	  echo -e "  ${TICK} Status: Successfully added\n"
 esac
 }
@@ -140,7 +140,7 @@ logs () {
 echo -n "  [?] Do you wish to flush logs too?  [Y/n] "
 read -n1 logs
 case $logs in
-        n)
+        n|N)
           echo -e "\n\n  [i] Target: Flush logs"
           echo -e "  ${CROSS}Status: Omitted\n"
           ;;
@@ -158,7 +158,17 @@ pihole -g
 }
 
 update () {
-pihole -up
+echo -n "  [?] Do you wish to check for updates?  [Y/n] "
+read -n1 updates
+case $updates in
+	n|N)
+	  echo -e "\n\n  [i] Target: Updates"
+	  echo -e "  ${CROSS}Status: Omitted\n"
+	  ;;
+	*)
+	  pihole -up
+	  ;;
+esac
 }
 
 pihole-list-update () {
