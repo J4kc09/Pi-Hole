@@ -1,16 +1,31 @@
 # /bin/sh
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-PIHOLE=/etc/pihole
+
+# DIRECTORIES
+DIR=/etc/pihole
+TMP=/tmp
+adlistFile=${DIR}/adlists.list
+whiteFile=${DIR}/whitelist.txt
+blackFile=${DIR}/blacklist.txt
+regexFile=${DIR}/regex.list
+
+# COLOURS
+COL_NC='\e[0m' # No Color
+COL_GREEN='\e[1;32m'
+COL_RED='\e[1;31m'
+
+# SYMBOLS
+TICK="[${COL_GREEN}\u2714${COL_NC}]"
+CROSS="[${COL_RED}\u2714${COL_NC}]"
 
 logo () {
-echo -e "\e[32m
-        .;;,.
+echo -e "
+        ${COL_GREEN}.;;,.
         .ccccc:,.
          :cccclll:.      ..,,
           :ccccclll.   ;ooodc
            'ccll:;ll .oooodc
-             .;cll.;;looo:.\e[31m
+             .;cll.;;looo:.${COL_RED}
                  .. ','.
                 .',,,,,,'.
               .',,,,,,,,,,.
@@ -24,133 +39,160 @@ echo -e "\e[32m
             ....',,,,,,,,,,,,.
                .',,,,,,,,,'.
                 .',,,,,,'.
-                  ..'''.
-\e[39m \n"
+                  ..'''.${COL_NC}
+"
 }
 
 defaults () {
-echo -e "Would you like to add default lists to adlists.list? [Y/n]\n"
-read -sn1 default
+echo -n "  [?] Do you wish to add default lists to adlists.list? [Y/n] "
+read -n1 default
 case $default in
         n)
-          echo "  [i] Target: Default adlist.list"
-          echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Omitted\n"
+          echo -e "\n\n  [i] Target: Default adlist.list"
+          echo -e "  ${CROSS} Status: Omitted\n"
           ;;
         *)
-          echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> $PIHOLE/adlists.lists
-          echo "https://mirror1.malwaredomains.com/files/justdomains" >> $PIHOLE/adlists.lists
-          echo "http://sysctl.org/cameleon/hosts" >> $PIHOLE/adlists.lists
-          echo "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt" >> $PIHOLE/adlists.lists
-          echo "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt" >> $PIHOLE/adlists.lists
-          echo "  [i] Target: Default adlist.list"
-          echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Restored defaults\n"                                                                                                      ;;
+          echo "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts" >> ${DIR}/adlists.lists
+          echo "https://mirror1.malwaredomains.com/files/justdomains" >> ${DIR}/adlists.lists
+          echo "http://sysctl.org/cameleon/hosts" >> ${DIR}/adlists.lists
+          echo "https://s3.amazonaws.com/lists.disconnect.me/simple_tracking.txt" >> ${DIR}/adlists.lists
+          echo "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt" >> ${DIR}/adlists.lists
+          echo -e "\n\n  [i] Target: Default adlist.list"
+          echo -e "  ${TICK} Status: Restored defaults\n"
+          ;;
 esac
 }
 
 
 lists () {
-echo "Select an adlist lists: [1-3]"
-echo " [1] Ticked lists (No one whitelisting) [default]"
-echo " [2] Non-crossed lists (Someone usually whitelisting)"
-echo -e " [3] All lists (Someone always whitelisting)\n"
-
-read -sn1 type
+echo -e "  [?] What adlist lists do you wish to add?\n"
+echo "    [1] Ticked lists (No one whitelisting) [default]"
+echo "    [2] Non-crossed lists (Someone usually whitelisting)"
+echo -e "    [3] All lists (Someone always whitelisting)\n"
+echo -n "  [i] Select [1-3]:  " ; read -n1 type && echo -e "\n"
 case $type in
         2)
-            wget -q "https://v.firebog.net/hosts/lists.php?type=nocross" -O $DIR/pihole-updater/adlists
+            wget -q "https://v.firebog.net/hosts/lists.php?type=nocross" -O ${TMP}/pihole-updater/adlists
             ;;
         3)
-	    wget -q "https://v.firebog.net/hosts/lists.php?type=all" -O $DIR/pihole-updater/adlists
+	    wget -q "https://v.firebog.net/hosts/lists.php?type=all" -O ${TMP}/pihole-updater/adlists
             ;;
         *)
-            wget -q "https://v.firebog.net/hosts/lists.php?type=tick" -O $DIR/pihole-updater/adlists
+            wget -q "https://v.firebog.net/hosts/lists.php?type=tick" -O ${TMP}/pihole-updater/adlists
 	    ;;
 esac
+cat /etc/pihole/adlists.list >> ${TMP}/pihole-updater/adlists
+sed -i '/hosts-file.net/d' ${TMP}/pihole-updater/adlists
+#sed -i '/Shalla-mal/d' $DIR/pihole-updater/adlists
+sort -u ${TMP}/pihole-updater/adlists > ${TMP}/pihole-updater/adlists.list
+:> ${DIR}/adlists.list && cat ${TMP}/pihole-updater/adlists.list > ${DIR}/adlists.list
+echo "  [i] Target: adlists"
+echo -e "  ${TICK} Status: Retrieval successful\n"
 }
 
-
 regex () {
-echo -e "Would you like to add a regex list? [Y/n]\n"
-read -sn1 regex
+echo -n "  [?] Do you wish to add a regex list? [Y/n] "
+read -n1 regex
 case $regex in
         n)
-	  echo "  [i] Target: Regex list"
-	  echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Omitted\n"
+	  echo -e "\n\n  [i] Target: Regex list"
+	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
 	*)
-          wget -q "https://raw.githubusercontent.com/mmotti/pihole-regex/master/regex.list" -O $DIR/pihole-updater/regex
-	  cat /etc/pihole/regex.list >> $DIR/pihole-updater/regex
-          sort -u $DIR/pihole-updater/regex > $DIR/pihole-updater/regex.list
-	  rm /etc/pihole/regex.list
-	  mv $DIR/pihole-updater/regex.list /etc/pihole/regex.list
-	  echo "  [i] Target: Regex list"
-	  echo -e "  [\e[32m\xE2\x9C\x94\\e[39m] Status: Successfully added\\n"
+          wget -q "https://raw.githubusercontent.com/mmotti/pihole-regex/master/regex.list" -O ${TMP}/pihole-updater/regex
+	  cat ${DIR}/regex.list >> ${TMP}/pihole-updater/regex
+          sort -u ${TMP}/pihole-updater/regex > ${TMP}/pihole-updater/regex.list
+	  :> ${DIR}/regex.list && cat ${TMP}/pihole-updater/regex.list > ${DIR}/regex.list
+	  pihole --regex -nr
+	  echo -e "\n\n  [i] Target: Regex list"
+	  echo -e "  ${TICK} Status: Successfully added\\n"
 	  ;;
 esac
 }
 
 whitelist () {
-echo -e "Would you like to add a whitelist?  [Y/n]\n"
-read -sn1 whitelist
+echo -n "  [?] Do you wish to add a whitelist?  [Y/n] "
+read -n1 whitelist
 case $whitelist in
 	n)
-	  echo "  [i] Target: Whitelist"
-	  echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Omitted\n"
+	  echo -e "\n\n  [i] Target: Whitelist"
+	  echo -e "  ${CROSS} Status: Omitted\n"
 	  ;;
 	*)
-	  wget -q "https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt" -O $DIR/pihole-updater/whitelist
-	  cat /etc/pihole/whitelist.txt >> $DIR/pihole-updater/whitelist
-	  sort -u $DIR/pihole-updater/whitelist > $DIR/pihole-updater/whitelist.txt
-	  rm /etc/pihole/whitelist.txt
-	  mv $DIR/pihole-updater/whitelist.txt /etc/pihole/whitelist.txt
-	  echo "  [i] Target: whitelist"
-	  echo -e "  [\e[32m\xE2\x9C\x94\\e[39m] Status: Successfully added\n"
+	  wget -q "https://raw.githubusercontent.com/anudeepND/whitelist/master/domains/whitelist.txt" -O ${TMP}/pihole-updater/whitelist
+	  cat ${DIR}/whitelist.txt >> ${TMP}/pihole-updater/whitelist
+	  sort -u ${TMP}/pihole-updater/whitelist > ${TMP}/pihole-updater/whitelist.txt
+          :> ${DIR}/whitelist.txt && cat ${TMP}/pihole-updater/whitelist.txt > ${DIR}/whitelist.txt
+	  pihole -w -nr
+	  echo -e "\n\n  [i] Target: whitelist"
+	  echo -e "  ${TICK} Status: Successfully added\n"
 esac
 }
 
+clean () {
+:> ${adlistFile}
+pihole -w --nuke && pihole -b --nuke && pihole --regex --nuke && pihole --wild --nuke
+echo "  [i] Target: Pi-Hole lists"
+echo -e "  ${TICK}Status: Successfully cleaned\n"
+}
+
+logs () {
+echo -n "  [?] Do you wish to flush logs too?  [Y/n] "
+read -n1 logs
+case $logs in
+        n)
+          echo -e "\n\n  [i] Target: Flush logs"
+          echo -e "  ${CROSS}Status: Omitted\n"
+          ;;
+        *)
+          echo -e "\n\n  [i] Target: Flush logs"
+          pihole -f
+          echo -e "  ${TICK}Status: Successfully done\n"
+          ;;
+esac
+}
+
+gravity () {
+echo -e "  [i] Updating lists...\n"
+pihole -g
+}
+
+update () {
+pihole -up
+}
+
 pihole-list-update () {
-
-mkdir -p $DIR/pihole-updater
-
-echo -e "Updating lists...\n"
-
+mkdir -p ${TMP}/pihole-updater
 lists
 defaults
-cat /etc/pihole/adlists.list >> $DIR/pihole-updater/adlists
-sed -i '/hosts-file.net/d' $DIR/pihole-updater/adlists
-#sed -i '/Shalla-mal/d' $DIR/pihole-updater/adlists
-sort -u $DIR/pihole-updater/adlists > $DIR/pihole-updater/adlists.list
-rm /etc/pihole/adlists.list
-mv $DIR/pihole-updater/adlists.list /etc/pihole/adlists.list
-echo "  [i] Target: adlists"
-echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Retrieval successful\n"
 regex
 whitelist
-
-rm -rf $DIR/pihole-updater
-
-echo -e "Updating Gravity...\n"
-pihole updateGravity
-
+rm -rf ${TMP}/pihole-updater
+gravity
 }
 
 if [ $1 == "--clean" ] || [ $1 == "-c" ]; then
 logo
-: > /etc/pihole/gravity.list && : > /etc/pihole/adlists.list && : > /etc/pihole/whitelist.txt && : > /etc/pihole/regex.txt rm /etc/pihole/list.*
+clean
 echo "  [i] Target: Pi-Hole lists"
-echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Successfully cleaned\n"
+echo -e "  ${TICK}Status: Successfully cleaned\n"
+logs
 defaults
+gravity
+update
 fi
 
 if [ $1 == "--clean-update" ] || [ $1 == "-cu" ]; then
 logo
-: > /etc/pihole/gravity.list && : > /etc/pihole/adlists.list && : > /etc/pihole/whitelist.txt && : > /etc/pihole/regex.txt rm /etc/pihole/list.*
+clean
 echo "  [i] Target: Pi-Hole lists"
-echo -e "  [\e[32m\xE2\x9C\x94\e[39m] Status: Successfully cleaned\n"
+echo -e "  ${TICK}Status: Successfully cleaned\n"
 pihole-list-update
+update
 fi
 
 if [ $1 == "--update" ] || [ $1 == "" ] || [ $1 == "-u" ]; then
 logo
 pihole-list-update
+update
 fi
