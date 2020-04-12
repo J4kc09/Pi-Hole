@@ -17,6 +17,11 @@ COL_RED='\e[1;31m'
 TICK="[${COL_GREEN}\u2714${COL_NC}]"
 CROSS="[${COL_RED}\u2714${COL_NC}]"
 
+# LISTS
+TICKD="wget -q https://v.firebog.net/hosts/lists.php?type=tick -O ${TMP}/pihole-updater/adlists"
+NOCROSS="wget -q https://v.firebog.net/hosts/lists.php?type=nocross -O ${TMP}/pihole-updater/adlists"
+ALL="wget -q https://v.firebog.net/hosts/lists.php?type=tick -O ${TMP}/pihole-updater/adlists"
+
 logo () {
 echo -e "
         ${COL_GREEN}.;;,.
@@ -61,29 +66,34 @@ case $default in
 esac
 }
 
+
 lists () {
 echo -e "  [?] What adlist lists do you wish to add?\n"
 echo "    [1] Ticked lists (No one whitelisting) [default]"
 echo "    [2] Non-crossed lists (Someone usually whitelisting)"
 echo -e "    [3] All lists (Someone always whitelisting)\n"
-echo -n "  [i] Select [1-3]:  " ; read -n1 type && printf "\n"
+echo -n "  [i] Select [1-3]:  " ; read -n1 type && echo -e "\n"
 case $type in
         2)
-            wget -q "https://v.firebog.net/hosts/lists.php?type=nocross" -O ${TMP}/pihole-updater/adlists
-            ;;
+          echo "  [i] Target:Non-crossed adlists"
+          ${NONCROSS}
+          ;;
         3)
-	    wget -q "https://v.firebog.net/hosts/lists.php?type=all" -O ${TMP}/pihole-updater/adlists
-            ;;
+	  echo "  [i] Target: All adlists"
+	  ${ALL}
+          ;;
         *)
-            wget -q "https://v.firebog.net/hosts/lists.php?type=tick" -O ${TMP}/pihole-updater/adlists
-	    ;;
+	  echo "  [i] Target: Ticked adlist"
+          ${TICKD}
+	  ;;
 esac
+}
+
+lists-apply () {
 cat /etc/pihole/adlists.list >> ${TMP}/pihole-updater/adlists
 sed -i '/hosts-file.net/d' ${TMP}/pihole-updater/adlists
-#sed -i '/Shalla-mal/d' $DIR/pihole-updater/adlists
 sort -u ${TMP}/pihole-updater/adlists > ${TMP}/pihole-updater/adlists.list
 :> ${DIR}/adlists.list && cat ${TMP}/pihole-updater/adlists.list > ${DIR}/adlists.list
-echo "  [i] Target: Adlists"
 echo -e "  ${TICK} Status: Retrieval successful\n"
 }
 
@@ -125,7 +135,7 @@ esac
 }
 
 clean () {
-:> ${adlistFile}
+:> ${adlistFile} && :> ${whiteFile} && :> ${blackFile} && :> ${regexFile}
 pihole -w --nuke && pihole -b --nuke && pihole --regex --nuke && pihole --wild --nuke
 echo "  [i] Target: Pi-Hole lists"
 echo -e "  ${TICK}Status: Successfully cleaned\n"
@@ -165,9 +175,27 @@ case $updates in
 esac
 }
 
-pihole-list-update () {
+auto () {
 mkdir -p ${TMP}/pihole-updater
+if [ "$2" == "" ]; then
 lists
+fi
+if [ "$2" == "--tick" ] || [ "$2" == "1" ]; then
+echo "  [i] Target: Ticked adlists"
+${TICKD}
+fi
+if [ "$2" == "--non-crossed" ] || [ "$2" == "2" ]; then
+echo "  [i] Target: Non-crossed adlists"
+${NONCROSS}
+fi
+if [ "$2" == "--all" ] || [ "$2" == "3" ]; then
+echo "  [i] Target: All adlists"
+${ALL}
+fi
+}
+
+pihole-lists () {
+lists-apply
 defaults
 regex
 whitelist
@@ -175,7 +203,32 @@ rm -rf ${TMP}/pihole-updater
 gravity
 }
 
-if [ $1 == "--clean" ] || [ $1 == "-c" ]; then
+if [ "$1" == "--install" ] || [ "$1" == "-i" ]; then
+curl -sSL https://install.pi-hole.net | bash
+echo -n "  [?] Do you wish to change the default password?  [Y/n] " ; read -n1 password && printf "\n"
+case $password in
+	n|N)
+	  echo -e "\n  [i] Target: Change default password"
+	  echo -e "  ${CROSS}Status: Omitted\n"
+	  ;;
+	*)
+	pihole -a -p
+	  ;;
+esac
+auto
+pihole-lists
+fi
+
+if [ "$1" == "--uninstall" ] || [ "$1" == "-u" ]; then
+if [ -d ${DIR} ]; then
+pihole uninstall
+rm -rf /etc/.pihole ${DIR} /opt/pihole /usr/bin/pihole-FTL /usr/local/bin/pihole /var/www/html/admin
+else
+echo "PiHole is not installed, use --install or -i option to install it."
+fi
+fi
+
+if [ "$1" == "--clean" ] || [ "$1" == "-c" ]; then
 logo
 clean
 logs
@@ -184,18 +237,25 @@ gravity
 update
 fi
 
-if [ $1 == "--clean-update" ] || [ $1 == "-cu" ]; then
+if [ "$1" == "--clean-update" ] || [ "$1" == "-cu" ]; then
 logo
 clean
-defaults
-pihole-list-update
-logs
+auto
+pihole-lists
 update
 fi
 
-if [ $1 == "--update" ] || [ $1 == "-u" ]; then
+if [ "$1" == "--update" ] || [ "$1" == "-up" ]; then
 logo
-pihole-list-update
-logs
+auto
+pihole-lists
 update
+fi
+
+if [ "$1" == "--cron" ] || [ "$1" == "-cr" ]; then
+echo "CRON"
+fi
+
+if [ "$1" == "" ] || [ "$1" == "--help" ] || [ "$1" == "-h" ]; then
+echo "HELP"
 fi
